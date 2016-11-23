@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 project(DLoopDetector)
 include(ExternalProject)
 
-option(BUILD_DemoBRIEF  "Build demo application with BRIEF features" OFF)
-option(BUILD_DemoSURF   "Build demo application with SURF features"  OFF)
+option(BUILD_DemoBRIEF  "Build demo application with BRIEF features" ON)
+option(BUILD_DemoSURF   "Build demo application with SURF features"  ON)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
@@ -43,8 +43,8 @@ macro(GetDependency name other_dependency)
     if(${DOWNLOAD_${name}_dependency})
       ExternalProject_Add(${name}
         PREFIX ${DEPENDENCY_DIR}
-        GIT_REPOSITORY http://github.com/dorian3d/${name}
-        GIT_TAG v1.1-nonfree
+        GIT_REPOSITORY http://github.com/vanurag/${name}
+        GIT_TAG opencv2.4
         INSTALL_DIR ${DEPENDENCY_INSTALL_DIR}
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
         DEPENDS ${other_dependency})
@@ -62,6 +62,7 @@ include_directories(include/DLoopDetector/)
 
 if(BUILD_DemoBRIEF)
   add_executable(demo_brief demo/demo_brief.cpp)
+  add_dependencies(demo_brief Dependencies)
   target_link_libraries(demo_brief ${OpenCV_LIBS} ${DLib_LIBS} ${DBoW2_LIBS})
 endif(BUILD_DemoBRIEF)
 
