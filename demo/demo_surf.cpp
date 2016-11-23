@@ -16,9 +16,9 @@
 #include <DUtilsCV/DUtilsCV.h> // defines macros CVXX
 
 // OpenCV
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/nonfree/features2d.hpp>
 
 // Demo
 #include "demoDetector.h"
@@ -79,18 +79,20 @@ void SurfExtractor::operator() (const cv::Mat &im,
   vector<cv::KeyPoint> &keys, vector<vector<float> > &descriptors) const
 {
   // extract surfs with opencv
-  static cv::Ptr<cv::xfeatures2d::SURF> surf_detector = 
-    cv::xfeatures2d::SURF::create(400);
+  static cv::Ptr<cv::SURF> surf_detector(new cv::SURF(400));
   
-  surf_detector->setExtended(false);
+  //surf_detector->setExtended(false);
   
   keys.clear(); // opencv 2.4 does not clear the vector
-  vector<float> plain;
-  surf_detector->detectAndCompute(im, cv::Mat(), keys, plain);
+  cv::Mat desc;
+  surf_detector->detect(im, keys);
+  surf_detector->compute(im, keys, desc);
+  vector<float> plain(desc.rows*desc.cols);
+  plain.assign((float*)desc.datastart, (float*)desc.dataend);
   
   // change descriptor format
   const int L = surf_detector->descriptorSize();
-  descriptors.resize(plain.size() / L);
+  descriptors.resize(desc.rows);
 
   unsigned int j = 0;
   for(unsigned int i = 0; i < plain.size(); i += L, ++j)
