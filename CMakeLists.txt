@@ -30,45 +30,33 @@ set(DEPENDENCY_INSTALL_DIR ${DEPENDENCY_DIR}/install)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-macro(GetDependency name other_dependency)
-  find_package(${name} QUIET 
-    PATHS ${DEPENDENCY_INSTALL_DIR})
-  if(${${name}_FOUND})
-    message("${name} library found, using it from the system")
-    include_directories(${${name}_INCLUDE_DIRS})
-    add_custom_target(${name})
-  else(${${name}_FOUND})
-    message("${name} library not found in the system, it will be downloaded on build")
-    option(DOWNLOAD_${name}_dependency "Download ${name} dependency" ON)
-    if(${DOWNLOAD_${name}_dependency})
-      ExternalProject_Add(${name}
-        PREFIX ${DEPENDENCY_DIR}
-        GIT_REPOSITORY http://github.com/vanurag/${name}
-        GIT_TAG opencv2.4
-        INSTALL_DIR ${DEPENDENCY_INSTALL_DIR}
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        DEPENDS ${other_dependency})
-    else()
-      message(SEND_ERROR "Please, activate DOWNLOAD_${name}_dependency option or download manually")
-    endif(${DOWNLOAD_${name}_dependency})
-  endif(${${name}_FOUND})
-endmacro(GetDependency)
+find_package(DLib REQUIRED)
+find_package(DBoW2 REQUIRED)
+include_directories(${DBoW2_INCLUDE_DIRS} ${DLib_INCLUDE_DIRS})
 
-GetDependency(DLib "")
-GetDependency(DBoW2 DLib)
-add_custom_target(Dependencies ${CMAKE_COMMAND} ${CMAKE_SOURCE_DIR} DEPENDS DBoW2 DLib)
+find_package(catkin REQUIRED COMPONENTS DBoW2 DLib)
+
+catkin_package(
+  INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS 
+    DBoW2    
+    DLib
+)
+
+include_directories(${catkin_INCLUDE_DIRS})
 
 include_directories(include/DLoopDetector/)
 
 if(BUILD_DemoBRIEF)
   add_executable(demo_brief demo/demo_brief.cpp)
   add_dependencies(demo_brief Dependencies)
-  target_link_libraries(demo_brief ${OpenCV_LIBS} ${DLib_LIBS} ${DBoW2_LIBS})
+  target_link_libraries(demo_brief ${OpenCV_LIBS} ${DLib_LIBS} ${DBoW2_LIBS} ${catkin_LIBRARIES})
 endif(BUILD_DemoBRIEF)
 
 if(BUILD_DemoSURF)
   add_executable(demo_surf demo/demo_surf.cpp)
-  target_link_libraries(demo_surf ${OpenCV_LIBS} ${DLib_LIBS} ${DBoW2_LIBS})
+  target_link_libraries(demo_surf ${OpenCV_LIBS} ${DLib_LIBS} ${DBoW2_LIBS} ${catkin_LIBRARIES})
 endif(BUILD_DemoSURF)
 
 if(BUILD_DemoBRIEF OR BUILD_DemoSURF)
@@ -93,10 +81,3 @@ endif(BUILD_DemoBRIEF OR BUILD_DemoSURF)
 
 configure_file(src/DLoopDetector.cmake.in
   "${PROJECT_BINARY_DIR}/DLoopDetectorConfig.cmake" @ONLY)
-
-install(DIRECTORY include/DLoopDetector DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/DLoopDetectorConfig.cmake"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME})
-install(FILES "${PROJECT_BINARY_DIR}/DLoopDetectorConfig.cmake" 
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/DLoopDetector/)
-install(DIRECTORY ${DEPENDENCY_INSTALL_DIR}/ DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL)

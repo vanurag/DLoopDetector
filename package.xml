@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+ <name>DLoopDetector</name>
+ <version>0.0.0</version>
+ <description>DLoopDetector_catkin</description>
+ <maintainer email="avempati@ethz.ch">Anurag Vempati</maintainer>
+
+ <license>See package</license>
+
+ <buildtool_depend>catkin</buildtool_depend>
+
+ <depend>DBoW2</depend>
+ <depend>DLib</depend>
+</package>
